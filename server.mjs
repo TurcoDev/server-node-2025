@@ -26,6 +26,42 @@ const server = createServer((req, res) => {
       res.end(JSON.stringify(newUser));
     });
   }
+
+  if (req.method === "PUT" && req.url === "/users") {
+    let body = "";
+    req.on("data", (chunk) => {
+      body += chunk.toString();
+    });
+
+    req.on("end", () => {
+      const updatedUser = JSON.parse(body);
+      const index = users.findIndex((user) => user.id === updatedUser.id);
+      if (index !== -1) {
+        users[index] = updatedUser;
+        res.writeHead(200, { "Content-Type": "application/json" });
+        res.end(JSON.stringify(updatedUser));
+      } else {
+        res.writeHead(404, { "Content-Type": "application/json" });
+        res.end(JSON.stringify({ error: "User not found" }));
+      }
+    });
+  }
+
+  if (req.method === "DELETE" && req.url.startsWith("/users/")) {
+    const arrayUrl = req.url.split("/");
+    console.log(`arrayUrl: ${arrayUrl}`);
+    
+    const userId = parseInt(arrayUrl[2]);
+    const index = users.findIndex((user) => user.id === userId);
+    if (index !== -1) {
+      users.splice(index, 1);
+      res.writeHead(204);
+      res.end();
+    } else {
+      res.writeHead(404, { "Content-Type": "application/json" });
+      res.end(JSON.stringify({ error: "User not found" }));
+    }
+  }
   
   if (req.url === "/") {
     res.writeHead(200, { "Content-Type": "text/plain" });
